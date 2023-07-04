@@ -82,15 +82,6 @@ def naive_bayes(csv_file):
     # Fitting Naive Bayes to the Training set
     classifier = MultinomialNB().fit(x_train, y_train)
 
-    # Evaluate the model of the training dataset
-    pred = classifier.predict(x_train)
-    print("--- Evaluation of the classifier on the training dataset ---")
-    print(classification_report(y_train, pred))
-    print()
-    print('Confusion Matrix :\n', confusion_matrix(y_train, pred))
-    print()
-    print('Accuracy : ', accuracy_score(y_train, pred))
-
     # Evaluate the model of the testing dataset
     print("--- Evaluation of the classifier on the test dataset ---")
     pred_test = classifier.predict(x_test)
@@ -104,28 +95,29 @@ def naive_bayes(csv_file):
 
 
 
-def save_classifier_and_vectorizer(csv_file, destination_folder):
+def save_classifier_and_vectorizer(csv_file, destination_folder, author_basename):
     vectorizer, classifier = naive_bayes(csv_file)
-    with open(f'{destination_folder}/classifier.pickle', 'wb') as f:
+    with open(f'{destination_folder}/naive_bayes_classifier_{author_basename}.pickle', 'wb') as f:
         pickle.dump(classifier, f)
-    with open(f'{destination_folder}/vectorizer.pickle', 'wb') as f:
+    with open(f'{destination_folder}/naive_bayes_vectorizer_{author_basename}.pickle', 'wb') as f:
         pickle.dump(vectorizer, f)
 
 
 def read_classifier_and_vectorizer():
-    with open('classifier.pickle', 'rb') as f:
+    with open('naive_bayes_classifier.pickle', 'rb') as f:
         classifier = pickle.load(f)
-    with open('vectorizer.pickle', 'rb') as f:
+    with open('naive_bayes_vectorizer.pickle', 'rb') as f:
         vectorizer = pickle.load(f)
 
     return vectorizer, classifier
 
 
 root_dir = '/home/youssef/Desktop/classification_algorithms_per_author/Datasets_per_author'
+classifiers_dir = '/home/youssef/Desktop/classification_algorithms_per_author/classifiers'
 authors_dirs = glob.glob(root_dir + "/*")
 for author_dir in authors_dirs:
     author_basename = author_dir.split("/")[-1]
     print(f"***************** {author_basename}*****************")
     csv_file = f"{author_dir}/{author_basename}_ai_human_merged.csv"
-    save_classifier_and_vectorizer(csv_file, author_dir)
+    save_classifier_and_vectorizer(csv_file, f"{classifiers_dir}/{author_basename}", author_basename)
     print()
