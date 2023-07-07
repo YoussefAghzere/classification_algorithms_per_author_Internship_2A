@@ -11,45 +11,14 @@ import pickle
 
 
 
-import spacy
-from nltk.stem import WordNetLemmatizer
-from autocorrect import Speller
-
-nltk.download('stopwords')
-nltk.download('wordnet')
-
-speller = Speller(lang='en')
-lemmatizer = WordNetLemmatizer()
-nlp = spacy.load('en_core_web_sm')
-
 def process_text(text):
   # Remove punctuation
-  text = text.translate(str.maketrans('', '', string.punctuation))
-
-  # Spell correction
-  text = speller(text)
-
-  # Lemmatize text
-  text = [lemmatizer.lemmatize(word) for word in text.split()]
+  nopunc = [char for char in text if char not in string.punctuation]
+  nopunc = ''.join(nopunc)
 
   # Remove stopwords
-  stop_words = nltk.corpus.stopwords.words('english') + ['no', 'not']
-  text = [word for word in text if word not in stop_words]
-
-  # Remove rare and common words
-  text = [word for word in text if word not in ['the', 'a', 'an'] and text.count(word) > 2]
-
-  # POS tagging
-  text = nlp(' '.join(text))
-  text = [word.text for word in text if word.pos_ not in ['DET', 'PRON']]
-
-  # Bigrams and trigrams
-  bigram = list(nltk.bigrams(text))
-  trigram = list(nltk.trigrams(text))
-  text = bigram + trigram
-
-  return text
-
+  clean_words = [word for word in nopunc.split() if word not in stopwords.words('english')]
+  return clean_words
 
 
 """def process_text(text):
