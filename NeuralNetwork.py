@@ -3,12 +3,17 @@ import string
 import nltk
 from nltk.corpus import stopwords
 import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
+from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 import pickle
+from sklearn.model_selection import GridSearchCV
 
+
+nltk.download('stopwords')
+nltk.download('wordnet')
 
 def process_text_1(text):
     # Remove punctuation
@@ -32,7 +37,8 @@ def process_text_2(text):
   return clean_words
 
 
-def logistic_regression_classifier(csv_file):
+
+def neural_network_classifier(csv_file):
     # Load the dataset from CSV
     dataset = pd.read_csv(csv_file)
 
@@ -44,7 +50,7 @@ def logistic_regression_classifier(csv_file):
     x_tests = []
     for analyzer in analyzers:
         # Create TF-IDF vectorizer to convert text into numerical features
-        vectorizer = TfidfVectorizer(analyzer=analyzer)
+        vectorizer = CountVectorizer(analyzer=analyzer)
         # Split the data into training and testing sets
         unique_styles = dataset['Writing Style'].unique()
 
@@ -65,7 +71,22 @@ def logistic_regression_classifier(csv_file):
         x_tests.append(x_test)
         y_tests.append(y_test)
         #Fitting K-NN classifier to the training set
-        classifier = LogisticRegression()
+        # Define a grid of hyperparameters to search over
+        param_grid = {
+            'hidden_layer_sizes': [(20,), (50,), (20, 20), (50, 30)],
+            'max_iter': [1000, 2000, 3000],
+            'alpha': [0.0001, 0.001, 0.01],
+        }
+
+        # Perform grid search to find the best hyperparameters
+        grid_search = GridSearchCV(MLPClassifier(), param_grid, cv=5)
+        grid_search.fit(x_train, y_train)
+
+        # Create a new MLPClassifier object with the best hyperparameters
+        best_params = grid_search.best_params_
+        classifier = MLPClassifier(**best_params)
+
+        # Fit the classifier to the training data
         classifier.fit(x_train, y_train)
         classifiers.append(classifier)
         vectorizers.append(vectorizer)
@@ -92,11 +113,14 @@ def logistic_regression_classifier(csv_file):
 
 
 
+
+
+
 def save_classifier_and_vectorizer(csv_file, destination_folder, author_basename):
-    vectorizer, classifier = logistic_regression_classifier(csv_file)
-    with open(f'{destination_folder}/logistic_regression_classifier_{author_basename}.pickle', 'wb') as f:
+    vectorizer, classifier = neural_network_classifier(csv_file)
+    with open(f'{destination_folder}/neural_network_classifier_{author_basename}.pickle', 'wb') as f:
         pickle.dump(classifier, f)
-    with open(f'{destination_folder}/logistic_regression_vectorizer_{author_basename}.pickle', 'wb') as f:
+    with open(f'{destination_folder}/neural_network_vectorizer_{author_basename}.pickle', 'wb') as f:
         pickle.dump(vectorizer, f)
 
 def read_classifier_and_vectorizer():
@@ -113,8 +137,10 @@ def read_classifier_and_vectorizer():
   text_bow = vectorizer.transform([text_test])
   text_test_pred = classifier.predict(text_bow)
   return text_test_pred
-
 """
+
+
+
 
 root_dir = '/home/youssef/Desktop/classification_algorithms_per_author/Datasets_per_author'
 classifiers_dir = '/home/youssef/Desktop/classification_algorithms_per_author/classifiers'
@@ -123,6 +149,9 @@ for author_dir in authors_dirs:
     author_basename = author_dir.split("/")[-1]
     print(f"***************** {author_basename} *****************")
     csv_file = f"{author_dir}/{author_basename}_ai_human_merged.csv"
+    # neural_network_classifier(csv_file)
     save_classifier_and_vectorizer(csv_file, f"{classifiers_dir}/{author_basename}", author_basename)
-    # logistic_regression_classifier(csv_file)
     print()
+
+
+

@@ -4,10 +4,11 @@ import nltk
 from nltk.corpus import stopwords
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 import pickle
+
 
 
 def process_text_1(text):
@@ -32,7 +33,7 @@ def process_text_2(text):
   return clean_words
 
 
-def logistic_regression_classifier(csv_file):
+def knn_classifier(csv_file):
     # Load the dataset from CSV
     dataset = pd.read_csv(csv_file)
 
@@ -65,7 +66,7 @@ def logistic_regression_classifier(csv_file):
         x_tests.append(x_test)
         y_tests.append(y_test)
         #Fitting K-NN classifier to the training set
-        classifier = LogisticRegression()
+        classifier= KNeighborsClassifier(n_neighbors=4, metric='minkowski', p=2 )
         classifier.fit(x_train, y_train)
         classifiers.append(classifier)
         vectorizers.append(vectorizer)
@@ -92,11 +93,12 @@ def logistic_regression_classifier(csv_file):
 
 
 
+
 def save_classifier_and_vectorizer(csv_file, destination_folder, author_basename):
-    vectorizer, classifier = logistic_regression_classifier(csv_file)
-    with open(f'{destination_folder}/logistic_regression_classifier_{author_basename}.pickle', 'wb') as f:
+    vectorizer, classifier = knn_classifier(csv_file)
+    with open(f'{destination_folder}/knn_classifier_{author_basename}.pickle', 'wb') as f:
         pickle.dump(classifier, f)
-    with open(f'{destination_folder}/logistic_regression_vectorizer_{author_basename}.pickle', 'wb') as f:
+    with open(f'{destination_folder}/knn_vectorizer_{author_basename}.pickle', 'wb') as f:
         pickle.dump(vectorizer, f)
 
 def read_classifier_and_vectorizer():
@@ -116,6 +118,8 @@ def read_classifier_and_vectorizer():
 
 """
 
+
+
 root_dir = '/home/youssef/Desktop/classification_algorithms_per_author/Datasets_per_author'
 classifiers_dir = '/home/youssef/Desktop/classification_algorithms_per_author/classifiers'
 authors_dirs = glob.glob(root_dir + "/*")
@@ -124,5 +128,8 @@ for author_dir in authors_dirs:
     print(f"***************** {author_basename} *****************")
     csv_file = f"{author_dir}/{author_basename}_ai_human_merged.csv"
     save_classifier_and_vectorizer(csv_file, f"{classifiers_dir}/{author_basename}", author_basename)
-    # logistic_regression_classifier(csv_file)
+    # knn_classifier(csv_file)
     print()
+
+
+
